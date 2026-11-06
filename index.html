@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <meta name="description" content="Cronômetro de produção para costura" />
+  <title>Cronômetro Produção</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1c1c1e;
+      --text: #f5f5f7;
+      --text-secondary: #8e8e93;
+      --accent: #30d158;
+      --accent-dim: #1a7f37;
+      --danger: #ff453a;
+      --button: #2c2c2e;
+      --button-active: #3a3a3c;
+      --border: #38383a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 12px 0 8px;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .timer-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .time-display {
+      font-size: 72px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .time-display.zero {
+      color: var(--danger);
+    }
+
+    .time-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    .total-pieces {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .total-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .controls {
+      padding-bottom: 20px;
+    }
+
+    .section-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .rate-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .rate-btn {
+      background: var(--button);
+      border: 2px solid transparent;
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 600;
+      padding: 14px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .rate-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .rate-btn:active {
+      transform: scale(0.96);
+    }
+
+    .custom-rate {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .custom-rate input {
+      flex: 1;
+      background: var(--button);
+      border: none;
+      color: var(--text);
+      font-size: 17px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .custom-rate button {
+      background: var(--button);
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 0 18px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    .add-section {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .add-section input {
+      flex: 1;
+      background: var(--button);
+      border: none;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 600;
+      padding: 16px;
+      border-radius: 14px;
+      outline: none;
+      text-align: center;
+    }
+
+    .add-section input::placeholder {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 0 24px;
+      border-radius: 14px;
+      min-width: 110px;
+    }
+
+    .btn-add:active {
+      opacity: 0.85;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 16px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .btn-pause {
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .btn-pause.running {
+      background: #ff9f0a;
+      color: #000;
+    }
+
+    .btn-reset {
+      background: var(--button);
+      color: var(--text-secondary);
+    }
+
+    .btn:active {
+      opacity: 0.8;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    /* Modal simples */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-cancel {
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .modal-confirm {
+      background: var(--danger);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cronômetro de Produção</h1>
+  </header>
+
+  <div class="timer-section">
+    <div class="time-display" id="timeDisplay">00:00</div>
+    <div class="time-label">tempo restante</div>
+    <div class="total-pieces" id="totalPieces">0</div>
+    <div class="total-label">peças no total</div>
+  </div>
+
+  <div class="controls">
+    <div class="section-label">Taxa (peças por minuto)</div>
+    <div class="rate-buttons">
+      <button class="rate-btn active" data-rate="2.5">2,5</button>
+      <button class="rate-btn" data-rate="3">3,0</button>
+      <button class="rate-btn" data-rate="3.33">3,33</button>
+      <button class="rate-btn" data-rate="4">4,0</button>
+    </div>
+
+    <div class="custom-rate">
+      <input type="number" id="customRate" placeholder="Outra taxa" step="0.01" min="0.1" inputmode="decimal" />
+      <button id="btnCustomRate">Usar</button>
+    </div>
+
+    <div class="section-label">Adicionar peças</div>
+    <div class="add-section">
+      <input type="number" id="qtyInput" placeholder="Ex: 112" min="1" inputmode="numeric" />
+      <button class="btn-add" id="btnAdd">Adicionar</button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-pause" id="btnPause">Pausar</button>
+      <button class="btn btn-reset" id="btnReset">Zerar dia</button>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- Modal de confirmação -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>Zerar o dia?</h2>
+      <p>Isso vai apagar o total de peças e o tempo restante.</p>
+      <div class="modal-buttons">
+        <button class="modal-cancel" id="modalCancel">Cancelar</button>
+        <button class="modal-confirm" id="modalConfirm">Zerar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== Estado ==========
+    let rate = 2.5;                 // peças por minuto
+    let totalPieces = 0;
+    let remainingMs = 0;            // milissegundos restantes
+    let endTime = null;             // timestamp de quando deve zerar
+    let isRunning = false;
+    let isPaused = false;
+    let wakeLock = null;
+    let timerInterval = null;
+    let audioCtx = null;
+
+    // Elementos
+    const timeDisplay = document.getElementById('timeDisplay');
+    const totalPiecesEl = document.getElementById('totalPieces');
+    const qtyInput = document.getElementById('qtyInput');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnPause = document.getElementById('btnPause');
+    const btnReset = document.getElementById('btnReset');
+    const statusEl = document.getElementById('status');
+    const customRateInput = document.getElementById('customRate');
+    const btnCustomRate = document.getElementById('btnCustomRate');
+    const rateButtons = document.querySelectorAll('.rate-btn');
+    const modal = document.getElementById('modal');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    // ========== Persistência ==========
+    function saveState() {
+      const state = {
+        rate,
+        totalPieces,
+        remainingMs: isRunning && !isPaused ? Math.max(0, endTime - Date.now()) : remainingMs,
+        isRunning,
+        isPaused
+      };
+      localStorage.setItem('prodTimer', JSON.stringify(state));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('prodTimer');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        rate = state.rate || 2.5;
+        totalPieces = state.totalPieces || 0;
+        remainingMs = state.remainingMs || 0;
+        isPaused = state.isPaused || false;
+        isRunning = state.isRunning || false;
+
+        // Atualiza botões de taxa
+        rateButtons.forEach(btn => {
+          btn.classList.toggle('active', parseFloat(btn.dataset.rate) === rate);
+        });
+
+        if (isRunning && !isPaused && remainingMs > 0) {
+          endTime = Date.now() + remainingMs;
+          startTicker();
+          requestWakeLock();
+          updatePauseButton();
+        } else if (remainingMs > 0) {
+          isPaused = true;
+          isRunning = true;
+          updatePauseButton();
+        }
+
+        updateDisplay();
+      } catch (e) {}
+    }
+
+    // ========== Formatação ==========
+    function formatTime(ms) {
+      if (ms <= 0) return '00:00';
+      const totalSec = Math.ceil(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      if (h > 0) {
+        return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function updateDisplay() {
+      let ms = remainingMs;
+      if (isRunning && !isPaused && endTime) {
+        ms = Math.max(0, endTime - Date.now());
+      }
+      timeDisplay.textContent = formatTime(ms);
+      timeDisplay.classList.toggle('zero', ms <= 0 && totalPieces > 0);
+      totalPiecesEl.textContent = totalPieces.toLocaleString('pt-BR');
+    }
+
+    // ========== Timer ==========
+    function startTicker() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isRunning || isPaused) return;
+
+        const now = Date.now();
+        remainingMs = Math.max(0, endTime - now);
+        updateDisplay();
+
+        if (remainingMs <= 0) {
+          onTimeUp();
+        }
+        saveState();
+      }, 200);
+    }
+
+    function onTimeUp() {
+      isRunning = false;
+      isPaused = false;
+      remainingMs = 0;
+      endTime = null;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      releaseWakeLock();
+      updatePauseButton();
+      updateDisplay();
+      saveState();
+
+      // Aviso
+      vibrate();
+      playBeep();
+      statusEl.textContent = 'Tempo esgotado!';
+      setTimeout(() => statusEl.textContent = '', 4000);
+    }
+
+    // ========== Ações ==========
+    function addPieces() {
+      const qty = parseFloat(qtyInput.value);
+      if (!qty || qty <= 0) {
+        qtyInput.focus();
+        return;
+      }
+
+      const addedMs = (qty / rate) * 60 * 1000;
+      totalPieces += qty;
+
+      if (!isRunning) {
+        // Primeiro lote ou depois de zerar
+        remainingMs = addedMs;
+        endTime = Date.now() + remainingMs;
+        isRunning = true;
+        isPaused = false;
+        startTicker();
+        requestWakeLock();
+      } else if (isPaused) {
+        remainingMs += addedMs;
+      } else {
+        // Está rodando: adiciona tempo ao endTime
+        endTime += addedMs;
+        remainingMs = endTime - Date.now();
+      }
+
+      qtyInput.value = '';
+      updateDisplay();
+      updatePauseButton();
+      saveState();
+      statusEl.textContent = `+${qty} peças adicionadas`;
+      setTimeout(() => statusEl.textContent = '', 2000);
+    }
+
+    function togglePause() {
+      if (!isRunning && remainingMs <= 0) return;
+
+      if (isPaused) {
+        // Continuar
+        endTime = Date.now() + remainingMs;
+        isPaused = false;
+        startTicker();
+        requestWakeLock();
+        statusEl.textContent = 'Retomado';
+      } else {
+        // Pausar
+        remainingMs = Math.max(0, endTime - Date.now());
+        isPaused = true;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        releaseWakeLock();
+        statusEl.textContent = 'Pausado';
+      }
+      updatePauseButton();
+      updateDisplay();
+      saveState();
+      setTimeout(() => statusEl.textContent = '', 2000);
+    }
+
+    function updatePauseButton() {
+      if (!isRunning && remainingMs <= 0) {
+        btnPause.textContent = 'Pausar';
+        btnPause.classList.remove('running');
+        btnPause.disabled = true;
+        return;
+      }
+      btnPause.disabled = false;
+      if (isPaused) {
+        btnPause.textContent = 'Continuar';
+        btnPause.classList.add('running');
+      } else {
+        btnPause.textContent = 'Pausar';
+        btnPause.classList.remove('running');
+      }
+    }
+
+    function resetDay() {
+      isRunning = false;
+      isPaused = false;
+      remainingMs = 0;
+      endTime = null;
+      totalPieces = 0;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      releaseWakeLock();
+      updateDisplay();
+      updatePauseButton();
+      saveState();
+      statusEl.textContent = 'Dia zerado';
+      setTimeout(() => statusEl.textContent = '', 2000);
+      modal.classList.remove('show');
+    }
+
+    // ========== Taxa ==========
+    rateButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        rate = parseFloat(btn.dataset.rate);
+        rateButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        customRateInput.value = '';
+        saveState();
+      });
+    });
+
+    btnCustomRate.addEventListener('click', () => {
+      const val = parseFloat(customRateInput.value.replace(',', '.'));
+      if (val && val > 0) {
+        rate = val;
+        rateButtons.forEach(b => b.classList.remove('active'));
+        saveState();
+        statusEl.textContent = `Taxa: ${rate} peças/min`;
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }
+    });
+
+    // ========== Wake Lock ==========
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => {
+            // tenta reassumir se ainda estiver rodando
+            if (isRunning && !isPaused) {
+              setTimeout(requestWakeLock, 500);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+
+    // ========== Feedback ==========
+    function vibrate() {
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 400]);
+      }
+    }
+
+    function playBeep() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.5);
+
+        // segundo beep
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.frequency.value = 1174;
+          osc2.type = 'sine';
+          gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.4);
+        }, 300);
+      } catch (e) {}
+    }
+
+    // ========== Eventos ==========
+    btnAdd.addEventListener('click', addPieces);
+    qtyInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addPieces();
+    });
+
+    btnPause.addEventListener('click', togglePause);
+    btnReset.addEventListener('click', () => modal.classList.add('show'));
+    modalCancel.addEventListener('click', () => modal.classList.remove('show'));
+    modalConfirm.addEventListener('click', resetDay);
+
+    // Visibilidade (quando volta do background)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && isRunning && !isPaused) {
+        updateDisplay();
+        requestWakeLock();
+      }
+    });
+
+    // Iniciar
+    loadState();
+    updatePauseButton();
+    updateDisplay();
+  </script>
+</body>
+</html>
